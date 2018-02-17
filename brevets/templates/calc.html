@@ -116,6 +116,8 @@
 
   var SCRIPT_ROOT = {{ request.script_root|tojson|safe }} ;
   var TIME_CALC_URL = SCRIPT_ROOT + "/_calc_times";
+  //var distance_=document.getElementById('brevet_dist_km');
+
 
   // Pass calctimes a <td> element containing the data for a control.
   // It extracts the distance and calls the server to get times to
@@ -126,18 +128,30 @@
     var km = control.find("input[name='km']").val();
     var open_time_field = control.find("input[name='open']");
     var close_time_field = control.find("input[name='close']");
+    var data_dis = $("#brevet_dist_km").val();
+    var data_date = $("#begin_date").val();
+    var data_time = $("#begin_time").val();
+
+
     
-    $.getJSON(TIME_CALC_URL, { km: km }, 
+    $.getJSON(TIME_CALC_URL, { km: km, data_dis:data_dis, data_date:data_date, data_time:data_time }, 
       // response handler
       function(data) {
          var times = data.result;
          console.log("Got a response: " +  times);
          console.log("Response.open = " + times.open);
+         if(times.open == 'Wrong'){
+          open_time_field.val( 'distance too long');
+         close_time_field.val('distance too long');
+         }else{
          open_time_field.val( moment(times.open).format("ddd M/D H:mm"));
          close_time_field.val( moment(times.close).format("ddd M/D H:mm"));
+       }
        } // end of handler function
      );// End of getJSON
     }
+
+
 
   $(document).ready(function(){
    // Do the following when the page is finished loading

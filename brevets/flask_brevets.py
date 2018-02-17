@@ -9,6 +9,7 @@ from flask import request
 import arrow  # Replacement for datetime, based on moment.js
 import acp_times  # Brevet time calculations
 import config
+import math
 
 import logging
 
@@ -53,12 +54,23 @@ def _calc_times():
     """
     app.logger.debug("Got a JSON request")
     km = request.args.get('km', 999, type=float)
+
+
     app.logger.debug("km={}".format(km))
     app.logger.debug("request.args: {}".format(request.args))
     # FIXME: These probably aren't the right open and close times
     # and brevets may be longer than 200km
-    open_time = acp_times.open_time(km, 200, arrow.now().isoformat)
-    close_time = acp_times.close_time(km, 200, arrow.now().isoformat)
+    distance_ = request.args.get('data_dis', '', type= int)
+    date_ = request.args.get('data_date', '', type= str)
+    time_ = request.args.get('data_time', '', type= str)
+    time_format= date_ + 'T' + time_+':00.000000-08:00'
+    time_arrow = arrow.get(time_format)
+
+    open_time = acp_times.open_time(km, distance_, time_arrow)
+    close_time = acp_times.close_time(km, distance_, time_arrow)
+    assert(acp_times.open_time(2000,200,time_arrow) == "Wrong")
+    assert(acp_times.open_time(34,200,time_arrow) ==time_arrow.shift(hours=+1).isoformat())
+    assert(acp_times.close_time(15, 600,time_arrow) == time_arrow.shift(hours=+1).isoformat())
     result = {"open": open_time, "close": close_time}
     return flask.jsonify(result=result)
 
